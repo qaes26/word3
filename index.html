@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الدليل التفاعلي الشامل لبرنامج Microsoft Word</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<script>
+tailwind.config={theme:{extend:{fontFamily:{cairo:['Cairo','sans-serif']},colors:{word:'#2b579a',wordLight:'#3b6eb5',wordDark:'#1e3f6f'}}}}
+</script>
+<style>
+*{font-family:'Cairo',sans-serif;margin:0;padding:0;box-sizing:border-box}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:rgba(43,87,154,0.3);border-radius:9px}
+body{background:#f0f4f8;transition:background 0.4s,color 0.4s}
+body.dark{background:#0f172a;color:#e2e8f0}
+.glass{background:rgba(255,255,255,0.7);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.3)}
+body.dark .glass{background:rgba(15,23,42,0.7);border:1px solid rgba(255,255,255,0.08)}
+.sidebar-item{transition:all 0.3s ease}
+.sidebar-item:hover,.sidebar-item.active{background:rgba(43,87,154,0.15);transform:translateX(-4px)}
+body.dark .sidebar-item:hover,body.dark .sidebar-item.active{background:rgba(59,110,181,0.2)}
+.card{transition:all 0.35s cubic-bezier(0.4,0,0.2,1)}
+.card:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(43,87,154,0.15)}
+.fade-in{animation:fadeIn 0.5s ease forwards}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.icon-box{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2b579a,#3b6eb5);color:white;flex-shrink:0}
+.grp-title{font-size:1.1rem;font-weight:800;color:#2b579a;margin:24px 0 12px;padding-bottom:8px;border-bottom:2px solid rgba(43,87,154,0.15);display:flex;align-items:center;gap:8px}
+.grp-title:first-child{margin-top:0}
+body.dark .grp-title{color:#7ba4d4;border-color:rgba(123,164,212,0.2)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:30}
+@media(max-width:768px){.sidebar{transform:translateX(100%);position:fixed!important;z-index:40;top:0;right:0;height:100%}.sidebar.open{transform:translateX(0)}.overlay.show{display:block}}
+</style>
+</head>
+<body class="min-h-screen font-cairo">
+
+<!-- Top Bar -->
+<header class="glass fixed top-0 left-0 right-0 z-20 px-4 py-3 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-3">
+<button id="menuBtn" class="md:hidden p-2 rounded-xl hover:bg-word/10">
+<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+</button>
+<div class="flex items-center gap-2">
+<div class="w-9 h-9 rounded-xl bg-gradient-to-br from-word to-wordLight flex items-center justify-center">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M21 4H7a1 1 0 00-1 1v14a1 1 0 001 1h14a1 1 0 001-1V5a1 1 0 00-1-1zm-1 14H8V6h12v12zM3 6H2v15a1 1 0 001 1h15v-1H4V6z"/><path d="M14.5 8L12 13.2 9.5 8H8l3.3 8h1.4l3.3-8z"/></svg>
+</div>
+<h1 class="text-lg font-bold text-word">دليل Word</h1>
+</div>
+</div>
+<button id="themeBtn" class="p-2 rounded-xl hover:bg-word/10 transition">
+<svg id="sunIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2b579a" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+<svg id="moonIcon" class="hidden" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
+</button>
+</header>
+
+<div class="overlay" id="overlay"></div>
+
+<!-- Sidebar -->
+<aside id="sidebar" class="sidebar glass fixed top-[60px] right-0 w-64 h-[calc(100vh-60px)] overflow-y-auto p-3 transition-transform duration-300 md:translate-x-0 shadow-lg z-40 md:z-10">
+<nav id="nav" class="flex flex-col gap-1"></nav>
+</aside>
+
+<!-- Main Content -->
+<main id="content" class="pt-[76px] md:mr-64 p-4 md:p-8 min-h-screen transition-all duration-300"></main>
+
+<script>
+const tabs=[
+{id:'file',title:'ملف',icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>'},
+{id:'home',title:'الشريط الرئيسي',icon:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
+{id:'insert',title:'إدراج',icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>'},
+{id:'layout',title:'تخطيط الصفحة',icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/>'},
+{id:'references',title:'مراجع',icon:'<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>'},
+{id:'review',title:'مراجعة',icon:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'},
+{id:'view',title:'عرض',icon:'<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'}
+];
+
+function G(title,svg){
+return `<div class="grp-title"><div class="w-8 h-8 rounded-lg bg-word/10 flex items-center justify-center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2b579a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svg}</svg></div>${title}</div>`;
+}
+function makeCard(t,s,d,svg){
+return `<div class="card glass rounded-2xl p-5 cursor-pointer">
+<div class="flex items-start gap-4">
+<div class="icon-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svg}</svg></div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2 mb-1"><h3 class="font-bold text-base">${t}</h3>${s?`<span class="text-[10px] px-2 py-0.5 rounded-full bg-word/10 text-word font-semibold">${s}</span>`:''}</div>
+<p class="text-sm opacity-70 leading-relaxed">${d}</p>
+</div></div></div>`;
+}
+const C=makeCard;
+
+const content={
+file:`<h2 class="text-2xl font-bold text-word mb-2">قائمة ملف (File)</h2>
+<p class="text-sm opacity-60 mb-6">إدارة المستندات: إنشاء، حفظ، فتح، طباعة، ومشاركة الملفات</p>
+${G('الحفظ — Save','<path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('حفظ','Ctrl+S','حفظ التغييرات في المستند الحالي. إذا كان جديداً سيطلب تحديد الاسم والمكان','<path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>')}
+${C('حفظ باسم','F12','حفظ نسخة جديدة من المستند باسم مختلف أو بتنسيق آخر (docx, pdf, rtf)','<path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M13 3v5h5"/>')}
+${C('الاسترداد التلقائي','','استعادة المستندات غير المحفوظة بعد انقطاع مفاجئ في التيار أو تعطل البرنامج','<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>')}
+</div>
+${G('إنشاء وفتح — Create & Open','<path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('جديد','Ctrl+N','إنشاء مستند فارغ أو اختيار قالب جاهز (سيرة ذاتية، تقرير، خطاب...)','<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/>')}
+${C('فتح','Ctrl+O','فتح مستند موجود من الجهاز أو من OneDrive أو من المستندات الأخيرة','<path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>')}
+${C('المستندات الأخيرة','','قائمة بآخر المستندات التي تم فتحها للوصول السريع إليها','<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>')}
+</div>
+${G('الطباعة والتصدير — Print & Export','<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('طباعة','Ctrl+P','طباعة المستند مع خيارات: عدد النسخ، نطاق الصفحات، الطابعة، طباعة وجهين','<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>')}
+${C('تصدير كـ PDF','','تحويل المستند إلى ملف PDF للمشاركة مع الحفاظ على التنسيق في كل الأجهزة','<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M9 13h2m-2 3h4"/>')}
+</div>
+${G('المشاركة والمعلومات — Share & Info','<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('مشاركة','','مشاركة المستند مع الآخرين عبر البريد أو OneDrive مع التحكم بصلاحيات التحرير','<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>')}
+${C('معلومات المستند','','عرض خصائص المستند: الحجم، عدد الكلمات، تاريخ الإنشاء، الكاتب','<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>')}
+${C('خيارات Word','','الوصول لإعدادات البرنامج المتقدمة: اللغة، التدقيق، الحفظ التلقائي، وأكثر','<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>')}
+</div>`,
+
+home:`<h2 class="text-2xl font-bold text-word mb-2">الشريط الرئيسي (Home)</h2>
+<p class="text-sm opacity-60 mb-6">يحتوي على الأدوات الأكثر استخداماً لتنسيق النص والفقرات</p>
+${G('الحافظة — Clipboard','<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('لصق','Ctrl+V','لصق المحتوى المنسوخ من الحافظة. يمكنك اختيار لصق خاص للتحكم بالتنسيق','<path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>')}
+${C('قص','Ctrl+X','قص النص المحدد ونقله إلى الحافظة لإعادة لصقه في مكان آخر','<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="9.53" x2="20" y2="4"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>')}
+${C('نسخ','Ctrl+C','نسخ النص أو العنصر المحدد إلى الحافظة مع الإبقاء على الأصل','<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>')}
+${C('نسخ التنسيق','','نسخ تنسيق نص محدد وتطبيقه على نص آخر. انقر مرتين لتطبيقه عدة مرات','<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>')}
+</div>
+${G('الخط — Font','<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('نوع الخط','','اختيار نوع الخط مثل Arial أو Times New Roman أو خطوط عربية كـ Simplified Arabic','<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>')}
+${C('حجم الخط','','تحديد حجم الخط بالنقاط (Points). الحجم الافتراضي غالباً 11 أو 12','<path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/><circle cx="12" cy="12" r="2"/>')}
+${C('غامق','Ctrl+B','جعل النص عريضاً لإبرازه وجذب الانتباه إليه','<path d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"/><path d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"/>')}
+${C('مائل','Ctrl+I','إمالة النص لاستخدامه في العناوين أو الاقتباسات والمصطلحات الأجنبية','<line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/>')}
+${C('تسطير','Ctrl+U','إضافة خط تحت النص المحدد لتمييزه أو الإشارة إلى رابط','<path d="M6 3v7a6 6 0 006 6 6 6 0 006-6V3"/><line x1="4" y1="21" x2="20" y2="21"/>')}
+${C('يتوسطه خط','','رسم خط في وسط النص للدلالة على حذفه أو تصحيحه','<line x1="4" y1="12" x2="20" y2="12"/><path d="M6 4h8a4 4 0 010 8H6z"/>')}
+${C('لون الخط','','تغيير لون النص المحدد. يمكنك اختيار ألوان مخصصة من لوحة الألوان','<path d="M12 3L4 19h2l2-4h8l2 4h2L12 3zm-2 10l2-5 2 5H10z"/>')}
+${C('لون التمييز','','تمييز النص بلون خلفية كقلم التظليل الفسفوري للإشارة لنص مهم','<rect x="3" y="14" width="18" height="4" rx="1" fill="yellow" stroke="none"/><path d="M12 3L4 14h16L12 3z"/>')}
+${C('تكبير/تصغير','','تكبير أو تصغير حجم الخط بمقدار نقطة واحدة في كل مرة','<path d="M4 7V4h16v3"/><path d="M12 4v16"/><path d="M15 8l3-3 3 3M15 16l3 3 3-3"/>')}
+${C('مسح التنسيق','','إزالة جميع التنسيقات من النص المحدد وإعادته للوضع الافتراضي','<path d="M4 7V4h16v3"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="3" y1="3" x2="21" y2="21" stroke="red"/>')}
+</div>
+${G('الفقرة — Paragraph','<line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="12" x2="3" y2="12"/><line x1="15" y1="18" x2="3" y2="18"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('تعداد نقطي','','إنشاء قائمة بنقاط (•) لعرض عناصر غير مرتبة','<line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/><circle cx="5" cy="6" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="5" cy="18" r="1.5"/>')}
+${C('تعداد رقمي','','إنشاء قائمة مرقمة (1، 2، 3...) لعرض خطوات مرتبة','<line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 4v4h1M4 12v4h2M4 20h2"/>')}
+${C('محاذاة لليمين','','محاذاة النص إلى الجهة اليمنى (الافتراضي للعربية)','<line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="10" x2="9" y2="10"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="9" y2="18"/>')}
+${C('توسيط','Ctrl+E','محاذاة النص في وسط السطر للعناوين والأسطر القصيرة','<line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/>')}
+${C('ضبط','Ctrl+J','توزيع النص بالتساوي على طول السطر مع محاذاة الطرفين','<line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/>')}
+${C('تباعد الأسطر','','التحكم في المسافة بين الأسطر (مفرد، 1.5، مزدوج) والتباعد قبل وبعد الفقرة','<line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="18" x2="3" y2="18"/><path d="M12 6v12M9 9l3-3 3 3M9 15l3 3 3-3"/>')}
+${C('حدود','','إضافة حدود حول الفقرة أو الخلية (أعلى، أسفل، يمين، يسار، كاملة)','<rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/>')}
+${C('تظليل','','إضافة لون خلفية للفقرة أو النص المحدد لإبرازه بصرياً','<rect x="3" y="3" width="18" height="18" rx="2" fill="rgba(43,87,154,0.2)" stroke="currentColor"/>')}
+</div>
+${G('الأنماط — Styles','<path d="M4 6h16M4 10h10M4 14h13M4 18h8"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('عادي','','النمط الافتراضي للنص العادي في المستند (حجم 11، Calibri)','<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="18" y2="12"/><line x1="4" y1="17" x2="16" y2="17"/>')}
+${C('عنوان 1','','نمط العنوان الرئيسي (حجم كبير، غامق). أهم مستوى في هيكل المستند','<path d="M4 4h6v16H4zM14 4h6v8h-6z"/>')}
+${C('عنوان 2','','نمط العنوان الفرعي (أصغر من عنوان 1). يستخدم لتقسيم الأقسام','<path d="M4 4h6v12H4zM14 4h6v6h-6z"/>')}
+${C('عنوان 3','','مستوى ثالث من العناوين لتنظيم المحتوى بشكل تفصيلي أكثر','<path d="M4 4h6v8H4zM14 4h6v4h-6z"/>')}
+</div>
+${G('التحرير — Editing','<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('بحث','Ctrl+F','البحث عن كلمة أو عبارة داخل المستند مع إمكانية تحديد خيارات متقدمة','<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>')}
+${C('استبدال','Ctrl+H','البحث عن نص واستبداله بنص آخر في كامل المستند أو جزء منه','<path d="M11 4H4v7M20 20h-7m7-13l-7 7"/>')}
+${C('تحديد','Ctrl+A','تحديد كل النص أو عناصر محددة في المستند','<rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4"/>')}
+</div>`,
+
+insert:`<h2 class="text-2xl font-bold text-word mb-2">إدراج (Insert)</h2>
+<p class="text-sm opacity-60 mb-6">إضافة عناصر متنوعة كالجداول والصور والأشكال إلى المستند</p>
+${G('الصفحات — Pages','<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('صفحة غلاف','','إدراج صفحة غلاف مصممة مسبقاً في بداية المستند مع عنوان ومعلومات','<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="13" y2="12"/>')}
+${C('صفحة فارغة','','إدراج صفحة فارغة جديدة في موضع المؤشر الحالي','<rect x="5" y="2" width="14" height="20" rx="2"/>')}
+${C('فاصل صفحات','Ctrl+Enter','بدء صفحة جديدة من موضع المؤشر. مفيد لفصل الفصول والأقسام','<path d="M3 12h4m4 0h2m4 0h4"/><rect x="5" y="2" width="14" height="7" rx="1"/><rect x="5" y="15" width="14" height="7" rx="1"/>')}
+</div>
+${G('الجداول — Tables','<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('إدراج جدول','','إنشاء جدول بتحديد عدد الصفوف والأعمدة. يمكنك السحب أو إدخال الأرقام يدوياً','<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>')}
+${C('جدول من Excel','','إدراج جدول بيانات Excel مضمن داخل مستند Word للحسابات','<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/><path d="M13 13l4 4m0-4l-4 4"/>')}
+</div>
+${G('الرسومات التوضيحية — Illustrations','<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('صورة','','إدراج صورة من جهازك أو من الإنترنت مباشرة في المستند','<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>')}
+${C('أشكال','','إدراج أشكال هندسية جاهزة: مستطيلات، دوائر، أسهم، خطوط، وأشكال حرة','<polygon points="12 2 22 20 2 20"/>')}
+${C('SmartArt','','إدراج رسومات تنظيمية ذكية: هياكل، دورات، هرميات، مصفوفات','<circle cx="12" cy="6" r="3"/><circle cx="6" cy="16" r="3"/><circle cx="18" cy="16" r="3"/><line x1="12" y1="9" x2="6" y2="13"/><line x1="12" y1="9" x2="18" y2="13"/>')}
+${C('مخطط بياني','','إدراج مخططات (أعمدة، دائري، خطي) لتمثيل البيانات بصرياً','<rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="3" width="4" height="18"/>')}
+${C('لقطة شاشة','','التقاط صورة لنافذة مفتوحة أو منطقة من الشاشة وإدراجها مباشرة','<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><rect x="6" y="6" width="4" height="3" rx="0.5" stroke-dasharray="2"/>')}
+</div>
+${G('الارتباطات — Links','<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('ارتباط تشعبي','Ctrl+K','إدراج رابط لموقع ويب أو ملف أو بريد إلكتروني أو موضع في المستند','<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>')}
+${C('إشارة مرجعية','','تعيين موضع معين في المستند للرجوع إليه بسرعة لاحقاً','<path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>')}
+${C('إسناد ترافقي','','إدراج مرجع لعنصر آخر في المستند (جدول، شكل، عنوان)','<path d="M4 6h16M4 10h10M4 14h13"/><path d="M18 10l3 4-3 4"/>')}
+</div>
+${G('رأس وتذييل الصفحة — Header & Footer','<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="17" x2="21" y2="17"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('رأس الصفحة','','إضافة نص ثابت أعلى كل صفحة (عنوان المستند، اسم الكاتب...)','<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="7" y1="6" x2="17" y2="6"/>')}
+${C('تذييل الصفحة','','إضافة نص ثابت أسفل كل صفحة (أرقام الصفحات، التاريخ...)','<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="7" y1="18" x2="17" y2="18"/>')}
+${C('رقم الصفحة','','إدراج ترقيم تلقائي للصفحات (أعلى، أسفل، أو في الهوامش)','<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18v-4m-2 0h4"/>')}
+</div>
+${G('النص — Text','<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('مربع نص','','إدراج مربع نص قابل للتحريك والتحجيم في أي مكان بالمستند','<rect x="3" y="5" width="18" height="14" rx="2"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="13" y2="13"/>')}
+${C('WordArt','','إدراج نص فني مزخرف بتأثيرات ثلاثية الأبعاد وألوان متدرجة','<path d="M4 20L8 4h2l4 8 4-8h2l4 16"/>')}
+${C('حرف استهلالي','','تكبير الحرف الأول من الفقرة ليمتد على عدة أسطر (Drop Cap)','<rect x="3" y="3" width="8" height="8" rx="1"/><line x1="14" y1="5" x2="21" y2="5"/><line x1="14" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="3" y1="19" x2="21" y2="19"/>')}
+${C('التاريخ والوقت','','إدراج التاريخ والوقت الحاليين بتنسيقات مختلفة مع تحديث تلقائي','<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>')}
+</div>
+${G('الرموز — Symbols','<circle cx="12" cy="12" r="10"/><path d="M9 9a3 3 0 016 0c0 2-3 3-3 3M12 17h.01"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('معادلة','','إدراج معادلات رياضية معقدة باستخدام محرر المعادلات المدمج','<path d="M4 12h6m4 0h6M7 6l3 6-3 6M17 6l-3 6 3 6"/>')}
+${C('رمز','','إدراج رموز خاصة غير موجودة على لوحة المفاتيح (©، ™، ←، ♥)','<circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/>')}
+</div>`,
+
+layout:`<h2 class="text-2xl font-bold text-word mb-2">تخطيط الصفحة (Layout)</h2>
+<p class="text-sm opacity-60 mb-6">التحكم في مظهر الصفحة وإعداداتها وتنسيق الفقرات</p>
+${G('إعداد الصفحة — Page Setup','<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('الهوامش','','ضبط المسافة بين النص وحافة الورقة. خيارات جاهزة: عادي (2.54سم)، ضيق (1.27سم)، واسع، أو مخصص','<rect x="3" y="3" width="18" height="18" rx="2"/><rect x="6" y="6" width="12" height="12" rx="1" stroke-dasharray="3"/>')}
+${C('الاتجاه','','تغيير اتجاه الصفحة: طولي (Portrait) للمستندات العادية، أو عرضي (Landscape) للجداول العريضة','<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M7 11l5-5 5 5"/>')}
+${C('الحجم','','اختيار حجم الورق: A4 (الأكثر شيوعاً)، Letter، Legal، A3، أو حجم مخصص','<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>')}
+${C('الأعمدة','','تقسيم النص إلى أعمدة (2 أو 3 أعمدة أو أكثر) كتنسيق الصحف والمجلات','<rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/>')}
+${C('فواصل','','إدراج فاصل صفحة (Page Break) أو فاصل مقطع (Section Break) أو فاصل عمود','<path d="M3 12h4m4 0h2m4 0h4"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>')}
+${C('أرقام الأسطر','','إضافة أرقام تسلسلية على جانب كل سطر في المستند. مفيد للمستندات القانونية','<line x1="7" y1="6" x2="21" y2="6"/><line x1="7" y1="12" x2="21" y2="12"/><line x1="7" y1="18" x2="21" y2="18"/><path d="M3 6h1M3 12h1M3 18h1"/>')}
+</div>
+${G('الفقرة — Paragraph','<line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="12" x2="3" y2="12"/><line x1="15" y1="18" x2="3" y2="18"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('المسافة البادئة يسار','','تحريك بداية الفقرة بعيداً عن الهامش الأيسر بمسافة محددة','<line x1="21" y1="6" x2="9" y2="6"/><line x1="21" y1="10" x2="9" y2="10"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/>')}
+${C('المسافة البادئة يمين','','تحريك نهاية الفقرة بعيداً عن الهامش الأيمن بمسافة محددة','<line x1="15" y1="6" x2="3" y2="6"/><line x1="15" y1="10" x2="3" y2="10"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/>')}
+${C('التباعد قبل','','إضافة مسافة فارغة قبل الفقرة (بالنقاط) لفصلها عن الفقرة السابقة','<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18" x2="21" y2="18"/><path d="M12 6v4m-2-2l2 2 2-2"/>')}
+${C('التباعد بعد','','إضافة مسافة فارغة بعد الفقرة (بالنقاط) لفصلها عن الفقرة التالية','<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="18" x2="21" y2="18"/><path d="M12 14v4m-2-2l2 2 2-2"/>')}
+</div>`,
+
+references:`<h2 class="text-2xl font-bold text-word mb-2">مراجع (References)</h2>
+<p class="text-sm opacity-60 mb-6">أدوات إنشاء الفهارس والحواشي والاقتباسات الأكاديمية</p>
+${G('جدول المحتويات — Table of Contents','<path d="M4 6h16M4 10h10M4 14h13M4 18h8"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('جدول محتويات','','إنشاء فهرس تلقائي يعتمد على أنماط العناوين (Heading 1,2,3). يتحدث تلقائياً عند تغيير الصفحات','<path d="M4 6h16M4 10h10M4 14h13M4 18h8"/><rect x="2" y="2" width="20" height="20" rx="2"/>')}
+${C('إضافة نص','','تحديد فقرة لتظهر في جدول المحتويات حتى لو لم تكن بنمط عنوان','<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/>')}
+${C('تحديث الجدول','','تحديث جدول المحتويات ليعكس التغييرات الأخيرة في العناوين وأرقام الصفحات','<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>')}
+</div>
+${G('الحواشي السفلية — Footnotes','<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('حاشية سفلية','','إضافة ملاحظة تظهر في أسفل الصفحة مع رقم مرجعي في النص. تُستخدم للتوضيحات','<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="8" y1="18" x2="16" y2="18"/>')}
+${C('تعليق ختامي','','إضافة ملاحظة تظهر في نهاية المستند بدلاً من أسفل الصفحة','<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/>')}
+</div>
+${G('الاقتباسات والمراجع — Citations & Bibliography','<path d="M6 17C3 14 3 10 6 7l1 1c-2 2.5-2 6 0 8.5zm12 0c3-3 3-7 0-10l-1 1c2 2.5 2 6 0 8.5z"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('إدراج اقتباس','','إضافة مرجع أكاديمي (APA، MLA، Chicago) داخل النص مع بيانات المصدر','<path d="M6 17C3 14 3 10 6 7l1 1c-2 2.5-2 6 0 8.5zm12 0c3-3 3-7 0-10l-1 1c2 2.5 2 6 0 8.5z"/>')}
+${C('إدارة المصادر','','إضافة وتعديل وحذف المصادر المرجعية المخزنة في قاعدة بيانات المراجع','<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="7" x2="17" y2="7"/><line x1="7" y1="11" x2="17" y2="11"/><line x1="7" y1="15" x2="13" y2="15"/>')}
+${C('قائمة المراجع','','إدراج قائمة المراجع الكاملة (Bibliography) في نهاية المستند تلقائياً','<path d="M4 6h16M4 10h16M4 14h16M4 18h12"/>')}
+</div>
+${G('التسميات التوضيحية — Captions','<rect x="3" y="3" width="18" height="12" rx="2"/><line x1="6" y1="19" x2="18" y2="19"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('تسمية توضيحية','','إضافة تسمية مرقمة (شكل 1، جدول 2) تحت أو فوق الصور والجداول','<rect x="3" y="3" width="18" height="12" rx="2"/><line x1="6" y1="19" x2="18" y2="19"/>')}
+${C('جدول الأشكال','','إنشاء فهرس تلقائي لجميع الأشكال والجداول المُسماة في المستند','<rect x="2" y="2" width="20" height="20" rx="2"/><path d="M6 6h12M6 10h8M6 14h10M6 18h6"/>')}
+</div>`,
+
+review:`<h2 class="text-2xl font-bold text-word mb-2">مراجعة (Review)</h2>
+<p class="text-sm opacity-60 mb-6">أدوات التدقيق اللغوي والتعليقات وتتبع التعديلات وحماية المستند</p>
+${G('التدقيق — Proofing','<circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('تدقيق إملائي ونحوي','F7','فحص المستند بالكامل وتصحيح الأخطاء الإملائية والنحوية مع اقتراحات بديلة','<circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>')}
+${C('قاموس المرادفات','Shift+F7','البحث عن مرادفات وكلمات بديلة لتحسين أسلوب الكتابة وتنويع المفردات','<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M8 7h8M8 11h6"/>')}
+${C('عدد الكلمات','','عرض إحصائيات المستند: عدد الكلمات والأحرف والفقرات والأسطر والصفحات','<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/>')}
+</div>
+${G('التعليقات — Comments','<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('تعليق جديد','','إضافة تعليق على النص المحدد. يظهر في الهامش ويمكن للآخرين الرد عليه','<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="13" y2="12"/>')}
+${C('حذف تعليق','','حذف التعليق المحدد أو جميع التعليقات في المستند','<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="9" y1="8" x2="15" y2="12"/><line x1="15" y1="8" x2="9" y2="12"/>')}
+${C('التنقل بين التعليقات','','الانتقال للتعليق التالي أو السابق بسهولة للمراجعة المنظمة','<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M9 10l3-3 3 3M9 14l3-3 3 3"/>')}
+</div>
+${G('التعقب — Tracking','<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('تتبع التغييرات','','تفعيل/تعطيل تسجيل كل تعديل يتم على المستند مع اسم المعدّل والتاريخ','<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>')}
+${C('قبول التغييرات','','الموافقة على التعديل المحدد أو جميع التعديلات ودمجها في المستند','<polyline points="20 6 9 17 4 12"/>')}
+${C('رفض التغييرات','','رفض التعديل المحدد أو جميع التعديلات وإعادة النص لحالته الأصلية','<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>')}
+</div>
+${G('حماية — Protect','<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('تقييد التحرير','','منع التعديل على المستند أو السماح بتعديلات محددة فقط مع كلمة مرور','<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>')}
+${C('حماية المستند','','حماية المستند بكلمة مرور لمنع الفتح أو التعديل غير المصرح به','<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>')}
+</div>`,
+
+view:`<h2 class="text-2xl font-bold text-word mb-2">عرض (View)</h2>
+<p class="text-sm opacity-60 mb-6">التحكم في طريقة عرض المستند وأدوات النافذة والتكبير</p>
+${G('طرق العرض — Views','<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('تخطيط الطباعة','','العرض الافتراضي: يظهر المستند كما سيُطبع مع الهوامش والرؤوس والتذييلات','<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="7" x2="17" y2="7"/><line x1="7" y1="11" x2="17" y2="11"/><line x1="7" y1="15" x2="13" y2="15"/>')}
+${C('وضع القراءة','','عرض المستند بملء الشاشة للقراءة المريحة بدون أشرطة أدوات','<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>')}
+${C('تخطيط الويب','','عرض المستند كصفحة ويب بدون حدود صفحات. مناسب للمحتوى المخصص للإنترنت','<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="6" y1="7" x2="18" y2="7"/><line x1="6" y1="11" x2="14" y2="11"/>')}
+${C('مخطط تفصيلي','','عرض هيكل المستند بمستويات العناوين فقط لإعادة ترتيب الأقسام بسهولة','<path d="M4 6h16M8 10h12M12 14h8M8 18h12"/>')}
+${C('مسودة','','عرض مبسط وسريع للنص فقط بدون تنسيقات الصفحة. مفيد للكتابة السريعة','<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="10" x2="18" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18" x2="15" y2="18"/>')}
+</div>
+${G('إظهار — Show','<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('المسطرة','','إظهار/إخفاء المسطرة الأفقية والعمودية لضبط الهوامش والمسافات البادئة بدقة','<line x1="2" y1="6" x2="22" y2="6"/><line x1="4" y1="6" x2="4" y2="10"/><line x1="8" y1="6" x2="8" y2="9"/><line x1="12" y1="6" x2="12" y2="10"/><line x1="16" y1="6" x2="16" y2="9"/><line x1="20" y1="6" x2="20" y2="10"/>')}
+${C('خطوط الشبكة','','إظهار شبكة خطوط مساعدة لمحاذاة العناصر والصور بدقة','<rect x="3" y="3" width="18" height="18"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>')}
+${C('جزء التنقل','','فتح لوحة جانبية تعرض العناوين والصفحات للتنقل السريع في المستند','<rect x="3" y="3" width="7" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/><line x1="5" y1="7" x2="8" y2="7"/><line x1="5" y1="11" x2="8" y2="11"/>')}
+</div>
+${G('تكبير/تصغير — Zoom','<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('تكبير/تصغير','Ctrl++/-','فتح نافذة التكبير لاختيار نسبة محددة (75%، 100%، 150%، 200%) أو نسبة مخصصة','<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>')}
+${C('100%','','إعادة العرض لحجمه الطبيعي (100%) لرؤية المستند بحجمه الفعلي','<circle cx="12" cy="12" r="10"/><path d="M12 8v4h3"/>')}
+${C('صفحة واحدة','','عرض صفحة واحدة كاملة في النافذة لمعاينة التخطيط العام','<rect x="6" y="3" width="12" height="18" rx="2"/>')}
+${C('صفحتان','','عرض صفحتين متجاورتين في النافذة لمقارنة المحتوى','<rect x="2" y="4" width="8" height="16" rx="1"/><rect x="14" y="4" width="8" height="16" rx="1"/>')}
+</div>
+${G('النافذة — Window','<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>')}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+${C('نافذة جديدة','','فتح نسخة ثانية من نفس المستند في نافذة منفصلة للعمل على جزأين مختلفين','<rect x="1" y="4" width="15" height="12" rx="2"/><rect x="8" y="8" width="15" height="12" rx="2"/>')}
+${C('تقسيم','','تقسيم نافذة المستند إلى جزأين لعرض مواضع مختلفة في نفس الوقت','<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/>')}
+${C('التبديل بين النوافذ','','التبديل بين المستندات المفتوحة المتعددة بسرعة','<rect x="2" y="4" width="8" height="12" rx="1"/><rect x="14" y="4" width="8" height="12" rx="1"/><path d="M10 10h4"/><path d="M12 8l2 2-2 2"/>')}
+</div>`
+};
+
+// Build sidebar
+const nav=document.getElementById('nav');
+tabs.forEach((t,i)=>{
+const btn=document.createElement('button');
+btn.className=`sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right ${i===0?'active':''}`;
+btn.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-70">${t.icon}</svg><span class="font-semibold text-sm">${t.title}</span>`;
+btn.onclick=()=>{
+document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+showTab(t.id);
+if(window.innerWidth<768){sidebar.classList.remove('open');overlay.classList.remove('show')}
+};
+nav.appendChild(btn);
+});
+
+const mainEl=document.getElementById('content');
+function showTab(id){
+mainEl.innerHTML=`<div class="fade-in max-w-5xl mx-auto">${content[id]}</div>`;
+}
+showTab('file');
+
+// Theme toggle
+const themeBtn=document.getElementById('themeBtn');
+themeBtn.onclick=()=>{
+document.body.classList.toggle('dark');
+document.getElementById('sunIcon').classList.toggle('hidden');
+document.getElementById('moonIcon').classList.toggle('hidden');
+};
+
+// Mobile menu
+const sidebar=document.getElementById('sidebar');
+const overlay=document.getElementById('overlay');
+document.getElementById('menuBtn').onclick=()=>{sidebar.classList.toggle('open');overlay.classList.toggle('show')};
+overlay.onclick=()=>{sidebar.classList.remove('open');overlay.classList.remove('show')};
+</script>
+</body>
+</html>
